@@ -8,7 +8,7 @@ import ipaddress
 from datetime import datetime
 from collections import defaultdict
 from database.database import db
-from config import BASE_URL, LOGGER
+from config import BASE_URL, LOGGER, SHORTLINK_URL
 
 routes = web.RouteTableDef()
 
@@ -188,14 +188,21 @@ async def proxy_request(request):
     hash_id = request.match_info['hash_id']
     user_agent = request.headers.get("User-Agent", "").lower()
     client_ip = get_client_ip(request)
+    
+    # ─── SECURITY EXCEPTION: Shortener Bypass ───
+    # If the user is returning from our configured shortlink URL, bypass the IP block.
+    # We check the referer to see if they came from there.
+    referer = request.headers.get("Referer", "").lower()
+    shortlink_domain = getattr(SHORTLINK_URL, "lower", lambda: str(SHORTLINK_URL).lower())()
+    is_shortener_return = shortlink_domain in referer or "arolinks.com" in referer
 
     # ─── SECURITY LAYER 1: IP Rate Limiting ───
-    if rate_limiter.is_blocked(client_ip):
+    if not is_shortener_return and rate_limiter.is_blocked(client_ip):
         log_ip(client_ip, hash_id, user_agent, "RATE_LIMITED")
         return _rate_limited_page()
 
     # ─── SECURITY LAYER 2: VPS/Datacenter IP Blocking ───
-    if is_vps_ip(client_ip):
+    if not is_shortener_return and is_vps_ip(client_ip):
         log_ip(client_ip, hash_id, user_agent, "VPS_BLOCKED")
         return _vps_blocked_page()
 
