@@ -13,6 +13,7 @@ from pyrogram.enums import ChatAction
 from bot import Bot
 from config import OWNER_ID, LOGGER
 from database.database import db
+from helper_func import admin
 
 # ======================== CRYPTO ALGORITHMS ======================== #
 
@@ -151,7 +152,7 @@ HASH_PANEL_PIC = "https://telegra.ph/file/ec17880d61180d3312d6a.jpg"
 
 # ======================== /hash COMMAND ======================== #
 
-@Bot.on_message(filters.command('hash') & filters.private & filters.user(OWNER_ID))
+@Bot.on_message(filters.command('hash') & filters.private & admin)
 async def hash_command(client: Client, message: Message):
     """Admin command to view and select the hashing algorithm."""
     await message.reply_chat_action(ChatAction.TYPING)
@@ -207,8 +208,8 @@ async def show_hash_panel(client, query_or_message):
 async def set_hash_callback(client: Client, query: CallbackQuery):
     """Handle algorithm selection button clicks."""
     user_id = query.from_user.id
-    if user_id != OWNER_ID:
-        return await query.answer("⚠️ Only the owner can change this setting.", show_alert=True)
+    if user_id != OWNER_ID and not await db.admin_exist(user_id):
+        return await query.answer("⚠️ Only admins can change this setting.", show_alert=True)
 
     algo_key = query.data.replace("set_hash_", "")
     

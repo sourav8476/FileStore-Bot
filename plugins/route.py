@@ -183,7 +183,7 @@ async def root_route_handler(request):
 
 # ======================== MASKED LINK HANDLER ======================== #
 
-@routes.get("/r/{hash_id:.*}")
+@routes.get("/r/{hash_id:.*}", allow_head=True)
 async def proxy_request(request):
     hash_id = request.match_info['hash_id']
     user_agent = request.headers.get("User-Agent", "").lower()
@@ -660,7 +660,7 @@ def _bot_detected_page():
         <div class="footer">Protected by <span class="brand">Codeflix</span> Security</div>
     </div></body></html>
     """
-    return web.Response(text=html, content_type='text/html', status=403)
+    return web.Response(text=html, content_type='text/html', status=200)
 
 
 def _rate_limited_page():
@@ -683,7 +683,7 @@ def _rate_limited_page():
         <div class="footer">Protected by <span class="brand">Codeflix</span> Security</div>
     </div></body></html>
     """
-    return web.Response(text=html, content_type='text/html', status=429)
+    return web.Response(text=html, content_type='text/html', status=200)
 
 
 def _vps_blocked_page():
@@ -706,7 +706,7 @@ def _vps_blocked_page():
         <div class="footer">Protected by <span class="brand">Codeflix</span> Security</div>
     </div></body></html>
     """
-    return web.Response(text=html, content_type='text/html', status=403)
+    return web.Response(text=html, content_type='text/html', status=200)
 
 
 def _link_expired_page():
@@ -729,4 +729,4 @@ def _link_expired_page():
         <div class="footer">Protected by <span class="brand">Codeflix</span> Security</div>
     </div></body></html>
     """
-    return web.Response(text=html, content_type='text/html', status=410)
+    return web.Response(text=html, content_type='text/html', status=200)
